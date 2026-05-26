@@ -1,0 +1,27 @@
+# Web Framework and Server
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy>=2.0
+asyncpg
+
+# Data Processing (From your imports)
+pandas
+openpyxl
+
+# File Upload Support
+python-multipart
+
+# Utilities
+python-dotenv
+
+pip install 'pydantic[email]'
+
+boto3
+
+python-multipart
+razorpay
+PyJWT 
+google-auth 
+requests

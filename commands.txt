@@ -1,0 +1,10 @@
+sudo -u postgres psql
+
+-- 1. Create the user
+CREATE USER halwa WITH PASSWORD 'halwa123';
+
+-- 2. Create the database and make the 'halwa' user the owner
+CREATE DATABASE halwa OWNER halwa;
+
+-- 3. (Optional) Grant all privileges just to be safe
+GRANT ALL PRIVILEGES ON DATABASE halwa TO halwa;
