@@ -145,6 +145,7 @@ async def add_product(
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+        
     
 
 

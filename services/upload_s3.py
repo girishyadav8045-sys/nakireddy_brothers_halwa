@@ -26,46 +26,46 @@ S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
 
 
 
-S3_BUCKET = "sample-geolocation-tester"
-S3_REGION = "ap-south-1"  # ap-south-1
+# S3_BUCKET = "sample-geolocation-tester"
+# S3_REGION = "ap-south-1"  # ap-south-1
 
-s3_client = boto3.client(
-    "s3",
-    aws_access_key_id=S3_ACCESS_KEY,
-    aws_secret_access_key=S3_SECRET_KEY,
-    region_name=S3_REGION,
-    config=Config(signature_version='s3v4')
-)
+# s3_client = boto3.client(
+#     "s3",
+#     aws_access_key_id=S3_ACCESS_KEY,
+#     aws_secret_access_key=S3_SECRET_KEY,
+#     region_name=S3_REGION,
+#     config=Config(signature_version='s3v4')
+# )
 
-CLOUDFRONT_URL = "https://d3a6tvcqrtqof5.cloudfront.net"
-s3_executor = ThreadPoolExecutor(max_workers=10)
+# CLOUDFRONT_URL = "https://d3a6tvcqrtqof5.cloudfront.net"
+# s3_executor = ThreadPoolExecutor(max_workers=10)
 
-def sync_s3_upload(file_content: bytes, filename: str, product_id: str):
-    """The actual blocking boto3 call"""
-    s3_key = f"products/{product_id}/{filename}"
+# def sync_s3_upload(file_content: bytes, filename: str, product_id: str):
+#     """The actual blocking boto3 call"""
+#     s3_key = f"products/{product_id}/{filename}"
     
-    s3_client.upload_fileobj(
-        BytesIO(file_content),
-        S3_BUCKET,
-        s3_key,
-        ExtraArgs={
-            "ContentType": "image/jpeg",
-            "ContentDisposition": "inline" 
-        }
-    )
-    return f"{CLOUDFRONT_URL}/{s3_key}"
+#     s3_client.upload_fileobj(
+#         BytesIO(file_content),
+#         S3_BUCKET,
+#         s3_key,
+#         ExtraArgs={
+#             "ContentType": "image/jpeg",
+#             "ContentDisposition": "inline" 
+#         }
+#     )
+#     return f"{CLOUDFRONT_URL}/{s3_key}"
 
-async def upload_product_images_to_s3(file_content: bytes, filename: str, product_id: str):
-    """Async wrapper that runs the upload in a separate thread"""
-    loop = asyncio.get_running_loop()
-    # This offloads the work to the thread pool so the API stays responsive
-    return await loop.run_in_executor(
-        s3_executor, 
-        sync_s3_upload, 
-        file_content, 
-        filename, 
-        product_id
-    )
+# async def upload_product_images_to_s3(file_content: bytes, filename: str, product_id: str):
+#     """Async wrapper that runs the upload in a separate thread"""
+#     loop = asyncio.get_running_loop()
+#     # This offloads the work to the thread pool so the API stays responsive
+#     return await loop.run_in_executor(
+#         s3_executor, 
+#         sync_s3_upload, 
+#         file_content, 
+#         filename, 
+#         product_id
+#     )
 
 
 
