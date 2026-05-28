@@ -107,7 +107,7 @@ async def complete_profile(req: CompleteProfileRequest, db: AsyncSession = Depen
         #     raise HTTPException(status_code=400, detail="Phone number already registered.")
 
         # 2. Generate custom ID
-        new_cust_id = uuid.uuid4()
+        new_cust_id = str(uuid.uuid4())
 
         # 3. Save to database
         # (Assuming your table has these exact column names)

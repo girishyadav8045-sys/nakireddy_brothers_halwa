@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr,  Field
+from pydantic import BaseModel, EmailStr,  Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
@@ -22,6 +22,8 @@ class PriceSchema(BaseModel):
     g500: Optional[float] = Field(None, alias="500g")
     g250: Optional[float] = Field(None, alias="250g")
 
+    model_config = ConfigDict(extra='allow')
+
 class NutrientSchema(BaseModel):
     name: str       # e.g., "Protein", "Sugar"
     amount: str     # e.g., "5g", "10mg"
@@ -36,7 +38,7 @@ class ProductInfoSchema(BaseModel):
 
 class ReviewSchema(BaseModel):
     name: str
-    stars: int = Field(..., ge=1, le=5)
+    stars: float = Field(..., ge=1, le=5)
     description: str
 
 

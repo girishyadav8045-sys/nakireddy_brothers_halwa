@@ -1,0 +1,9 @@
+cp /mnt/c/Users/brain/Downloads/halwa.pem ~/
+
+chmod 400 ~/halwa.pem
+
+ssh -i ~/halwa.pem ubuntu@YOUR_PUBLIC_IP
+
+sudo apt update && sudo apt upgrade -y
+
+sudo apt install python3-pip python3-venv git nginx postgresql postgresql-contrib -y

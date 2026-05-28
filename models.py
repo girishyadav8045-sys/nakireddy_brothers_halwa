@@ -56,6 +56,10 @@ class Product(Base):
 
     product_id = Column(String, primary_key=True, index=True)
     product_name = Column(String, nullable=False)
+
+    category = Column(String, server_default="General", default="General")
+    display_index = Column(Integer, server_default="0", default=0)
+    pricing_type = Column(String, server_default="weight", default="weight")
     
     # JSONB Fields
     image_urls = Column(JSONB, default=[]) # ["url1", "url2"]

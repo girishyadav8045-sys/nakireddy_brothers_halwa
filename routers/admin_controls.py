@@ -61,6 +61,9 @@ async def add_product(
     prices: str = Form(...), 
     info: str = Form(...),   
     reviews: str = Form("[]"), 
+    category: str = Form("General"),
+    display_index: int = Form(0),
+    pricing_type: str = Form("weight"), # Frontend will send "weight" or "piece"
     images: list[UploadFile] = File(...),
     db: AsyncSession = Depends(get_db)
 ):
@@ -81,16 +84,25 @@ async def add_product(
 
         # --- STEP 3: INITIAL DB INSERT ---
         insert_query = text("""
-            INSERT INTO products (product_id, product_name, image_urls, prices, info, reviews)
-            VALUES (:id, :name, '[]', :prices, :info, :reviews)
+            INSERT INTO products (
+                product_id, product_name, image_urls, prices, 
+                info, reviews, category, display_index, pricing_type
+            )
+            VALUES (
+                :id, :name, '[]', :prices, 
+                :info, :reviews, :category, :index, :ptype
+            )
         """)
 
         await db.execute(insert_query, {
-            "id": custom_product_id, # Saving "product_1" directly to the DB
+            "id": custom_product_id, 
             "name": product_name,
             "prices": json.dumps(validated_prices.model_dump(by_alias=True)),
             "info": json.dumps(validated_info.model_dump()),
-            "reviews": json.dumps([r.model_dump() for r in validated_reviews])
+            "reviews": json.dumps([r.model_dump() for r in validated_reviews]),
+            "category": category,
+            "index": display_index,
+            "ptype": pricing_type
         })
 
         # --- STEP 4: UPLOAD TO S3 ---

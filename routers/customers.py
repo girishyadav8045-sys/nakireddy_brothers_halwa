@@ -20,7 +20,7 @@ async def save_customer(customer: CustomerCreate, db: AsyncSession = Depends(get
     """)
 
     # 2. Generate a fresh UUID
-    new_id = uuid.uuid4()
+    new_id = str(uuid.uuid4())
 
     try:
         # 3. Execute the query

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException,UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException,UploadFile, File, Form, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from database import get_db
@@ -13,47 +13,61 @@ import asyncio
 router = APIRouter(prefix="/products", tags=["products"])
 
 @router.get("/list")
-async def get_all_products(db: AsyncSession = Depends(get_db)):
+async def get_all_products(
+    # --- NEW: Query Parameters ---
+    limit: Optional[int] = Query(None, description="Maximum number of products to return"),
+    offset: int = Query(0, description="Number of products to skip"),
+    db: AsyncSession = Depends(get_db)
+):
     try:
-        # 1. Raw SQL to fetch all products, newest first
-        # Notice we are selecting 'product_id' now instead of 'id'
-        query = text("""
-            SELECT product_id, product_name, image_urls, prices, info, reviews, created_at 
+        # 1. Base Query
+        query_string = """
+            SELECT 
+                product_id, product_name, image_urls, prices, info, reviews, created_at,
+                category, display_index, pricing_type
             FROM products 
-            ORDER BY created_at DESC;
-        """)
+            ORDER BY display_index ASC, created_at DESC
+        """
         
-        # 2. Execute the query
-        result = await db.execute(query)
+        # 2. Dynamically add LIMIT and OFFSET based on what the frontend asks for
+        params = {"offset": offset}
+        
+        if limit is not None:
+            query_string += " LIMIT :limit"
+            params["limit"] = limit
+            
+        query_string += " OFFSET :offset;"
+
+        # 3. Execute the query
+        query = text(query_string)
+        result = await db.execute(query, params)
         rows = result.fetchall()
 
-        # 3. Format the data into a clean list of dictionaries
+        # 4. Format the data
         products_list = []
         for row in rows:
             products_list.append({
-                # We just pass the string directly from the database now!
                 "product_id": row.product_id, 
                 "product_name": row.product_name,
-                
-                # Because these columns are JSONB, asyncpg automatically 
-                # converts them back into Python lists and dictionaries!
+                "category": row.category,
+                "display_index": row.display_index,
+                "pricing_type": row.pricing_type,
                 "image_urls": row.image_urls,
                 "prices": row.prices,
                 "info": row.info,
                 "reviews": row.reviews,
-                
-                # Convert the datetime object to a string for the JSON response
                 "created_at": row.created_at.isoformat() if row.created_at else None
             })
 
-        # 4. Return the data
         return {
             "status": "success",
-            "total_products": len(products_list),
+            "returned_count": len(products_list),
             "data": products_list
         }
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
 
@@ -69,6 +83,9 @@ async def update_product(
     # NEW: A JSON string of URLs the admin wants to KEEP. 
     # Example: '["https://d3a6tvcqrtqof5.cloudfront.net/products/product_1/image1.jpg"]'
     images_to_keep: Optional[str] = Form(None), 
+    category: Optional[str] = Form(None),
+    display_index: Optional[int] = Form(None),
+    pricing_type: Optional[str] = Form(None),
     
     new_images: list[UploadFile] = File(default=[]), 
     db: AsyncSession = Depends(get_db)
@@ -77,7 +94,12 @@ async def update_product(
         print(f"Updating: {product_id}")
         
         # --- STEP 1: FETCH EXISTING PRODUCT ---
-        fetch_query = text("SELECT product_name, image_urls, prices, info, reviews FROM products WHERE product_id = :id")
+        fetch_query = text("""
+            SELECT product_name, image_urls, prices, info, reviews, 
+                   category, display_index, pricing_type 
+            FROM products 
+            WHERE product_id = :id
+        """)
         result = await db.execute(fetch_query, {"id": product_id})
         existing_product = result.fetchone()
 
@@ -90,6 +112,9 @@ async def update_product(
         final_info = existing_product.info
         final_reviews = existing_product.reviews
         final_images = list(existing_product.image_urls)
+        final_category = category if category is not None else existing_product.category
+        final_display_index = display_index if display_index is not None else existing_product.display_index
+        final_pricing_type = pricing_type if pricing_type is not None else existing_product.pricing_type
 
         # --- STEP 3: VALIDATE NEW JSON DATA ---
         if prices:
@@ -156,7 +181,10 @@ async def update_product(
                 prices = :prices, 
                 info = :info, 
                 reviews = :reviews,
-                image_urls = :images
+                image_urls = :images,
+                category = :category,
+                display_index = :index,
+                pricing_type = :ptype
             WHERE product_id = :id
         """)
 
@@ -166,6 +194,9 @@ async def update_product(
             "info": json.dumps(final_info),
             "reviews": json.dumps(final_reviews),
             "images": json.dumps(final_images),
+            "category": final_category,
+            "index": final_display_index,
+            "ptype": final_pricing_type,
             "id": product_id
         })
 
