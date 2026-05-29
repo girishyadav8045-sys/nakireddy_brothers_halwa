@@ -140,3 +140,5 @@ class CreateAdminSchema(BaseModel):
     admin_name: str
     email: EmailStr
     phone_number: str
+
+

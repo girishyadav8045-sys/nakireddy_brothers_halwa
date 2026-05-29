@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Integer, text, ForeignKey, Float, DateTime, JSON, Boolean, UniqueConstraint
+from sqlalchemy import Column, String, DateTime, Integer, Text, ForeignKey, Float, DateTime, JSON, Boolean, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from database import Base
@@ -171,3 +171,23 @@ class CouponUsage(Base):
     __table_args__ = (
         UniqueConstraint('coupon_code', 'customer_id', name='uq_coupon_customer'),
     )
+
+
+
+class CategoryMetadata(Base):
+    __tablename__ = "category_metadata"
+
+    category_id = Column(String, primary_key=True, index=True)
+    
+    # This acts as the link to the 'category' column in your products table
+    category_name = Column(String, unique=True, nullable=False, index=True) 
+    
+    title = Column(String, nullable=True)
+    
+    # We use Text here instead of String because descriptions can be very long paragraphs
+    description = Column(Text, nullable=True) 
+    
+    # Safely defaulting to a Python list, exactly like you did for products
+    images = Column(JSONB, default=list, server_default='[]')
+    
+    display_index = Column(Integer, default=0, server_default="0")

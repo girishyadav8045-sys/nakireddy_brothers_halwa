@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import customers, admin_controls, products, cart, payments, admin_address, coupons, auth
+from routers import customers, admin_controls, products, cart, payments, admin_address, coupons, auth, categories
 
 # Import your async engine and Base from database.py
 from database import engine, Base, AsyncSessionLocal
@@ -64,3 +64,4 @@ app.include_router(payments.router)
 app.include_router(admin_address.router)
 app.include_router(coupons.router)
 app.include_router(auth.router)
+app.include_router(categories.router)

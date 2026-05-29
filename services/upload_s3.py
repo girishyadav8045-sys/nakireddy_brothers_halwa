@@ -148,3 +148,39 @@ async def upload_product_images_to_s3(file_content: bytes, filename: str, produc
 
 
 
+
+
+
+
+
+# ------------------categories----------------------------
+
+def sync_s3_category_upload(file_content: bytes, filename: str, category_name: str):
+    """The actual blocking boto3 call for Categories"""
+    # Clean the category name so it doesn't create weird folder names with spaces
+    safe_cat_name = category_name.replace(" ", "_").lower()
+    s3_key = f"database-images/categories/{safe_cat_name}/{filename}"
+    
+    s3_client.upload_fileobj(
+        BytesIO(file_content),
+        S3_BUCKET,
+        s3_key,
+        ExtraArgs={
+            "ContentType": "image/jpeg",
+            "ContentDisposition": "inline" 
+        }
+    )
+    return f"{CLOUDFRONT_URL}/{s3_key}"
+
+
+async def upload_category_images_to_s3(file_content: bytes, filename: str, category_name: str):
+    """Async wrapper that runs the upload in a separate thread"""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        s3_executor, 
+        sync_s3_category_upload, 
+        file_content, 
+        filename, 
+        category_name
+    )
+
